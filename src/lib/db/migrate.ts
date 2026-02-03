@@ -10,8 +10,9 @@ export async function runMigrations() {
     console.log("--------------------------------------------------");
 
     console.log("Creating admin user with email:", process.env.ADMIN_EMAIL);
+    let newUser;
     try {
-        const newUser = await auth.api.createUser({
+        newUser = await auth.api.createUser({
             body: {
                 email: process.env.ADMIN_EMAIL || "admin@deltas.email",
                 password: process.env.ADMIN_PASSWORD || "StrongPassword123",
@@ -26,6 +27,21 @@ export async function runMigrations() {
             console.info("Admin user already exists; skipping creation.");
         } else {
             throw err;
+        }
+    }
+    if (newUser) {
+        console.log("Creating an organization:", process.env.ORG_NAME);
+        try {
+            auth.api.createOrganization({
+                body: {
+                    name: process.env.ORG_NAME || "Deltas",
+                    slug: (process.env.ORG_NAME || "deltas").toLowerCase(),
+                    userId: newUser?.user.id,
+                    keepCurrentActiveOrganization: true,
+                },
+            })
+        } catch (err) {
+            console.error("Error creating organization:", err);
         }
     }
 }
