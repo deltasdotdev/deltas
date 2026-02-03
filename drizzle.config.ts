@@ -3,7 +3,7 @@ export default defineConfig({
   dialect: "sqlite",
   schema: "./src/lib/db/schema/*",
   dbCredentials: {
-    url: "file:deltas.sqlite"
+    url: process.env.APP_DB_FILE_NAME!,
   },
   out: "./drizzle", 
 });

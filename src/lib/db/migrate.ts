@@ -8,12 +8,9 @@ export async function runMigrations() {
     migrate(db, { migrationsFolder: "./drizzle" });
     console.info("Migrations completed.");
     console.log("--------------------------------------------------");
-    const adminExists = await db.select().from(schema.user).where(
-        eq(schema.user.role, "admin")
-    ).limit(1);
-    console.log("Admin exists:", adminExists.length > 0);
-    if (!adminExists.length) {
-        console.log("Creating admin user with email:", process.env.ADMIN_EMAIL);
+
+    console.log("Creating admin user with email:", process.env.ADMIN_EMAIL);
+    try {
         const newUser = await auth.api.createUser({
             body: {
                 email: process.env.ADMIN_EMAIL || "admin@deltas.email",
@@ -22,11 +19,13 @@ export async function runMigrations() {
                 role: "admin",
             },
         });
-        if (!process.env.ADMIN_EMAIL && !process.env.ADMIN_PASSWORD) {
-            console.warn("Warning: ADMIN_EMAIL or ADMIN_PASSWORD environment variables are not set. Using default credentials.");
-            console.error("It's highly recommended to set these environment variables for security reasons.");
-        }
         console.log("Admin user created with ID:", newUser.user.id);
-        console.log("--------------------------------------------------");
+    } catch (err) {
+        // Better Auth throws APIError on duplicate or constraint violation
+        if (err instanceof Error && /already exists|duplicate|unique/i.test(err.message)) {
+            console.info("Admin user already exists; skipping creation.");
+        } else {
+            throw err;
+        }
     }
 }
