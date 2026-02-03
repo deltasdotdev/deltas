@@ -24,7 +24,7 @@ export async function runMigrations() {
     } catch (err) {
         // Better Auth throws APIError on duplicate or constraint violation
         if (err instanceof Error && /already exists|duplicate|unique/i.test(err.message)) {
-            console.info("Admin user already exists; skipping creation.");
+            console.info("Admin user already exists; skipping user and organization creation.");
         } else {
             throw err;
         }
@@ -32,14 +32,15 @@ export async function runMigrations() {
     if (newUser) {
         console.log("Creating an organization:", process.env.ORG_NAME);
         try {
-            auth.api.createOrganization({
+            await auth.api.createOrganization({
                 body: {
                     name: process.env.ORG_NAME || "Deltas",
                     slug: (process.env.ORG_NAME || "deltas").toLowerCase(),
-                    userId: newUser?.user.id,
+                    userId: newUser.user.id,
                     keepCurrentActiveOrganization: true,
                 },
-            })
+            });
+            console.log("Organization created successfully.");
         } catch (err) {
             console.error("Error creating organization:", err);
         }
