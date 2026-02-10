@@ -1,4 +1,22 @@
-import { auth } from "./auth";
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import * as schema from "../../auth-schema";
+import { admin,organization } from "better-auth/plugins"
+import { db } from "./db";
+
+export const auth = betterAuth({
+  database: drizzleAdapter(db, {
+    provider: "sqlite",
+    schema: schema,
+
+  }),
+  emailAndPassword: {
+        enabled: true,
+    },
+    plugins: [
+       admin(),organization() 
+    ]
+});
 
 export async function initAuth() {
     console.log("Creating admin user with email:", process.env.ADMIN_EMAIL);
@@ -38,4 +56,3 @@ export async function initAuth() {
         }
     }
 }
-
