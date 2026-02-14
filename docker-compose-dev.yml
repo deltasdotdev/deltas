@@ -7,15 +7,15 @@ services:
     container_name: mailpit
     restart: unless-stopped
     volumes:
-        - ./data:/data
+      - ./data:/data
     ports:
-        - 8025:8025
-        - 1025:1025
+      - 8025:8025
+      - 1025:1025
     environment:
-        MP_MAX_MESSAGES: 5000
-        MP_DATABASE: /data/mailpit.db
-        MP_SMTP_AUTH_ACCEPT_ANY: 1
-        MP_SMTP_AUTH_ALLOW_INSECURE: 1
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
   # MinIO - S3-compatible object storage
   # Access console at: http://localhost:9001
@@ -24,8 +24,8 @@ services:
     image: minio/minio
     container_name: minio
     ports:
-      - "9000:9000"  # API
-      - "9001:9001"  # Console
+      - "9000:9000" # API
+      - "9001:9001" # Console
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
@@ -34,6 +34,65 @@ services:
     command: server /data --console-address ":9001"
     restart: unless-stopped
 
+  # PostgreSQL - Relational database
+  # Access at: localhost:5432
+  # Default credentials: root/mysecretpassword
+  db:
+    image: postgres
+    container_name: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment: 
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: local
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Redis - In-memory data store
+  # Access at: localhost:6379
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  # ClickHouse - OLAP database for analytics
+  # Access HTTP interface at: http://localhost:8123
+  # Native TCP interface at: localhost:9000 (conflicts with MinIO, consider changing)
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    container_name: clickhouse
+    restart: always
+    ports:
+      - 8123:8123 # HTTP interface
+      - 9440:9440 # Native TCP interface (alternative port to avoid MinIO conflict)
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-clickhouse}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
 volumes:
   minio_data:
+    driver: local
+  pgdata:
+    driver: local
+  redis_data:
+    driver: local
+  clickhouse_data:
+    driver: local
+  clickhouse_logs:
     driver: local
