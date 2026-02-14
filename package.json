@@ -1,0 +1,19 @@
+{
+  "name": "deltas",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/figlet": "^1.7.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "figlet": "^1.10.0"
+  },
+  "scripts": {
+    "docker": "docker-compose -f docker-compose-dev.yml up -d"
+	}
+}
