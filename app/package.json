@@ -1,0 +1,33 @@
+{
+	"name": "app",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"db-gen": "drizzle-kit generate",
+		"migrate": "drizzle-kit migrate",
+		"studio": "drizzle-kit studio",
+		"auth-gen": "npx @better-auth/cli generate --config src/lib/server/auth.js --output src/lib/server/db/auth.schema.js --yes"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-node": "^5.5.2",
+		"@sveltejs/kit": "^2.50.2",
+		"@sveltejs/vite-plugin-svelte": "^6.2.4",
+		"@tailwindcss/vite": "^4.1.18",
+		"@types/node": "^22",
+		"better-auth": "^1.4.18",
+		"drizzle-kit": "^0.31.8",
+		"drizzle-orm": "^0.45.1",
+		"svelte": "^5.49.2",
+		"tailwindcss": "^4.1.18",
+		"vite": "^7.3.1",
+		"vite-plugin-devtools-json": "^1.0.0"
+	},
+	"dependencies": {
+		"postgres": "^3.4.8"
+	}
+}
