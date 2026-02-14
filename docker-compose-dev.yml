@@ -64,7 +64,6 @@ services:
 
   # ClickHouse - OLAP database for analytics
   # Access HTTP interface at: http://localhost:8123
-  # Native TCP interface at: localhost:9000 (conflicts with MinIO, consider changing)
   clickhouse:
     image: clickhouse/clickhouse-server
     container_name: clickhouse
