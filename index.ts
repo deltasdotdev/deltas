@@ -572,8 +572,9 @@ function generateNginxConf(config: EnvConfig): string {
 
     const sslConfig = sslEnabled ? `
     # SSL Configuration
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
     
     ssl_certificate /etc/nginx/ssl/cert.pem;
     ssl_certificate_key /etc/nginx/ssl/key.pem;
@@ -720,6 +721,15 @@ ${apiLocation}${appLocation}
 function generateDockerCompose(config: EnvConfig): string {
     const services: string[] = [];
 
+    const nginxDeps = [
+        config.services.api?.enabled && 'api',
+        config.services.app?.enabled && 'app'
+    ].filter(Boolean);
+    
+    const nginxDependsOn = nginxDeps.length > 0 
+        ? `    depends_on:\n${nginxDeps.map(dep => `      - ${dep}`).join('\n')}`
+        : '';
+
     // Nginx
     if (config.services.nginx?.enabled) {
         const ports = '      - "80:80"\n      - "443:443"';
@@ -733,10 +743,9 @@ ${ports}
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - nginx_logs:/var/log/nginx
-    depends_on:
-      ${config.services.api?.enabled ? '- api\n      ' : ''}${config.services.app?.enabled ? '- app' : ''}
     networks:
-      - deltas-network`);
+      - deltas-network
+${nginxDependsOn ? '\n' + nginxDependsOn : ''}`);
     }
 
     // Deltas API

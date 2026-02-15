@@ -24,10 +24,15 @@ RUN bun build \
 
 # Production stage - distroless for security
 FROM gcr.io/distroless/base-debian12
-WORKDIR /app
 
-# Copy binary from build stage
-COPY --from=build /app/server ./server
+# Copy binary with non-root ownership
+COPY --chown=65532:65532 --from=build /app/server /app/server
+
+# Switch to non-root user
+USER nonroot
+
+# Set working directory
+WORKDIR /app
 
 # Environment
 ENV NODE_ENV=production
