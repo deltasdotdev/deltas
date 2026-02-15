@@ -750,6 +750,16 @@ ${nginxDependsOn ? '\n' + nginxDependsOn : ''}`);
 
     // Deltas API
     if (config.services.api?.enabled) {
+        const apiDeps = [
+            config.services.postgres?.enabled && 'db',
+            config.services.redis?.enabled && 'redis',
+            config.services.clickhouse?.enabled && 'clickhouse'
+        ].filter(Boolean);
+
+        const apiDependsOn = apiDeps.length > 0 
+            ? `    depends_on:\n${apiDeps.map(dep => `      - ${dep}`).join('\n')}`
+            : '';
+
         const apiPort = config.services.api.config.API_PORT || "3000";
         const ports = config.services.api.exposed
             ? `      - "${apiPort}:3000"`
@@ -770,10 +780,9 @@ ${ports}
     environment:
       NODE_ENV: production
       PORT: 3000
-    depends_on:
-      ${config.services.postgres?.enabled ? '- db\n      ' : ''}${config.services.redis?.enabled ? '- redis\n      ' : ''}${config.services.clickhouse?.enabled ? '- clickhouse' : ''}
     networks:
       - deltas-network
+${apiDependsOn ? '\n' + apiDependsOn : ''}
     # Optimizations for high-throughput ingestion
     ulimits:
       nofile:
@@ -783,6 +792,13 @@ ${ports}
 
     // Deltas App
     if (config.services.app?.enabled) {
+        const appDeps = [
+            config.services.api?.enabled && 'api'
+        ].filter(Boolean);
+
+        const appDependsOn = appDeps.length > 0 
+            ? `    depends_on:\n${appDeps.map(dep => `      - ${dep}`).join('\n')}`
+            : '';
         const appPort = config.services.app.config.APP_PORT || "5173";
         const ports = config.services.app.exposed
             ? `      - "${appPort}:5173"`
@@ -803,10 +819,9 @@ ${ports}
     environment:
       NODE_ENV: production
       PORT: 5173
-    depends_on:
-      ${config.services.api?.enabled ? '- api' : ''}
     networks:
-      - deltas-network`);
+      - deltas-network
+${appDependsOn ? '\n' + appDependsOn : ''}`);
     }
 
     // PostgreSQL
